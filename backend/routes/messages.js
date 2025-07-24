@@ -3,27 +3,6 @@ const router = express.Router();
 const Message = require('../models/Message');
 const auth = require('./auth-middleware');
 
-
-
-// router.post('/', auth, async (req, res) => {
-//   const { to, content } = req.body;
-
-//   const message = await Message.create({
-//     sender: req.user._id,
-//     receiver: to,
-//     content,
-//     read: false
-//   });
-
-//   res.json(message);
-//   console.log("New message:", {
-//     from: req.user._id,
-//     to,
-//     content,
-//   });
-  
-// });
-
 router.post("/", auth, async (req, res) => {
   try {
     console.log("Sending message from:", req.user); // 🟢 log this
@@ -47,15 +26,17 @@ router.post("/", auth, async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 });
-
+// GET unread count per sender
 router.get('/unread-count', auth, async (req, res) => {
   try {
-    const userId = req.params.userId;
-    // const userId = mongoose.Types.ObjectId(req.params.userId);
-
-
     const counts = await Message.aggregate([
-      { $match: { receiver: userId, read: false } },
+      {
+        $match: {
+          receiver: req.user._id,
+          read: false,
+          sender: { $ne: null }, // ✅ Filter out missing/null sender
+        }
+      },
       {
         $group: {
           _id: "$sender",
@@ -64,19 +45,53 @@ router.get('/unread-count', auth, async (req, res) => {
       }
     ]);
 
-    const countPerSender = {};
+    const unreadMap = {};
     counts.forEach(({ _id, count }) => {
-      countPerSender[_id] = count;
+      if (_id) unreadMap[_id.toString()] = count;
     });
 
-    res.json({ countPerSender });
+    res.json(unreadMap);
   } catch (err) {
-    console.error("Error getting unread counts:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("🔥 Error in /unread-count:", err);
+    res.status(500).json({ error: "Failed to get unread counts" });
   }
 });
 
-// Get conversation
+
+router.put('/mark-read', auth, async (req, res) => {
+  const { from } = req.body;
+
+  try {
+    await Message.updateMany(
+      { sender: from, receiver: req.user._id, read: false },
+      { $set: { read: true } }
+    );
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error("Error marking messages as read:", err);
+    res.status(500).json({ message: "Error marking messages as read" });
+  }
+});
+
+router.delete('/:userId', auth, async (req, res) => {
+  const userId = req.params.userId;
+
+  try {
+    await Message.deleteMany({
+      $or: [
+        { sender: req.user._id, receiver: userId },
+        { sender: userId, receiver: req.user._id },
+      ],
+    });
+
+    res.status(200).json({ message: "Chat deleted successfully" });
+  } catch (err) {
+    console.error("Error deleting chat:", err);
+    res.status(500).json({ message: "Failed to delete chat" });
+  }
+});
+
 router.get('/:userId', auth, async (req, res) => {
   const userId = req.params.userId;
   const messages = await Message.find({
@@ -91,53 +106,6 @@ router.get('/:userId', auth, async (req, res) => {
 console.log("req.params.userId:", req.params.userId);
 
 });
-
-// router.get('/:userId', auth, async (req, res) => {
-//   try {
-//     const userId = req.params.userId;
-
-//     const messages = await Message.find({
-//       $or: [
-//         { sender: req.user._id, receiver: userId },
-//         { sender: userId, receiver: req.user._id }
-//       ]
-//     }).sort({ createdAt: 1 });
-
-//     const firstUnread = messages.find(
-//       (msg) =>
-//         msg.receiver.toString() === req.user._id.toString() &&
-//         !msg.read
-//     );
-
-//     await Message.updateMany(
-//       { sender: userId, receiver: req.user._id, read: false },
-//       { $set: { read: true } }
-//     );
-
-//     res.json({
-//       messages,
-//       firstUnreadId: firstUnread ? firstUnread._id : null,
-//     });
-//   } catch (error) {
-//     console.error("🔥 Error in GET /:userId:", error);
-//     res.status(500).json({ error: 'Internal Server Error' });
-//   }
-// });
-
-
-
-
-// router.put('/mark-read', auth, async (req, res) => {
-//   const { from } = req.body;
-
-//   await Message.updateMany(
-//     { sender: from, receiver: req.user._id, read: false },
-//     { $set: { read: true } }
-//   );
-
-//   res.sendStatus(200);
-// });
-
 
 
 

@@ -10,39 +10,39 @@ router.get('/all', auth, async (req, res) => {
 });
 
 // ✅ Get pending requests for the logged-in user
-router.get('/requests', auth, async (req, res) => {
-  const user = await User.findById(req.user.id);
-  res.json(user.pendingRequests || []);
-});
+// router.get('/requests', auth, async (req, res) => {
+//   const user = await User.findById(req.user.id);
+//   res.json(user.pendingRequests || []);
+// });
 
 // ✅ Send connection request
-router.post('/request/:id', auth, async (req, res) => {
-  const targetUser = await User.findById(req.params.id);
-  if (!targetUser) return res.status(404).send("User not found");
-  if (targetUser.pendingRequests.includes(req.user.id)) return res.status(400).send("Already requested");
+// router.post('/request/:id', auth, async (req, res) => {
+//   const targetUser = await User.findById(req.params.id);
+//   if (!targetUser) return res.status(404).send("User not found");
+//   if (targetUser.pendingRequests.includes(req.user.id)) return res.status(400).send("Already requested");
 
-  targetUser.pendingRequests.push(req.user.id);
-  await targetUser.save();
-  res.send("Request sent");
-});
+//   targetUser.pendingRequests.push(req.user.id);
+//   await targetUser.save();
+//   res.send("Request sent");
+// });
 
 // ✅ Accept request
-router.post('/accept/:id', auth, async (req, res) => {
-  const user = await User.findById(req.user.id);
-  const requesterId = req.params.id;
+// router.post('/accept/:id', auth, async (req, res) => {
+//   const user = await User.findById(req.user.id);
+//   const requesterId = req.params.id;
 
-  if (!user.pendingRequests.includes(requesterId)) return res.status(400).send("No request from this user");
+//   if (!user.pendingRequests.includes(requesterId)) return res.status(400).send("No request from this user");
 
-  user.connections.push(requesterId);
-  user.pendingRequests = user.pendingRequests.filter(id => id.toString() !== requesterId);
+//   user.connections.push(requesterId);
+//   user.pendingRequests = user.pendingRequests.filter(id => id.toString() !== requesterId);
 
-  const requester = await User.findById(requesterId);
-  requester.connections.push(req.user.id);
+//   const requester = await User.findById(requesterId);
+//   requester.connections.push(req.user.id);
 
-  await user.save();
-  await requester.save();
-  res.send("Connection accepted");
-});
+//   await user.save();
+//   await requester.save();
+//   res.send("Connection accepted");
+// });
 
 // ✅ Delete user (admin only)
 router.delete('/:id', auth, async (req, res) => {
