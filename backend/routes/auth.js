@@ -4,7 +4,6 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-// Load secret from environment or fallback
 const JWT_SECRET = process.env.JWT_SECRET || "AqsaSuperChatSecret123!";
 
 router.post("/register", async (req, res) => {
@@ -43,7 +42,7 @@ router.post("/login", async (req, res) => {
     res
       .cookie("token", token, {
         httpOnly: true,
-        secure: false, // set to true in production (HTTPS)
+        secure: false, 
         sameSite: "Lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
@@ -54,7 +53,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// LOGOUT
 router.post("/logout", (req, res) => {
   res.clearCookie("token").send("Logged out");
 });

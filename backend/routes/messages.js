@@ -5,7 +5,6 @@ const auth = require('./auth-middleware');
 
 router.post("/", auth, async (req, res) => {
   try {
-    console.log("Sending message from:", req.user); // 🟢 log this
 
     const { to, content } = req.body;
 
@@ -22,11 +21,10 @@ router.post("/", auth, async (req, res) => {
     await newMessage.save();
     res.json(newMessage);
   } catch (err) {
-    console.error("🔥 Backend error while sending message:", err); // 👈 This will show real problem
+    console.error("🔥 Backend error while sending message:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
-// GET unread count per sender
 router.get('/unread-count', auth, async (req, res) => {
   try {
     const counts = await Message.aggregate([
@@ -34,7 +32,7 @@ router.get('/unread-count', auth, async (req, res) => {
         $match: {
           receiver: req.user._id,
           read: false,
-          sender: { $ne: null }, // ✅ Filter out missing/null sender
+          sender: { $ne: null }, 
         }
       },
       {

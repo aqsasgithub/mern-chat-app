@@ -39,7 +39,6 @@ io.on("connection", (socket) => {
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("receive-message", data);
     } else {
-      // Notify sender user is offline
       socket.emit("user-offline", { to: data.to });
     }
   });

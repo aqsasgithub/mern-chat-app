@@ -49,7 +49,6 @@ const Chat = ({ user, setUser }) => {
     }
   }, [user]);
 
-  // Fetch unread message counts every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       axios
@@ -57,12 +56,11 @@ const Chat = ({ user, setUser }) => {
           withCredentials: true,
         })
         .then((res) => setUnreadCounts(res.data));
-    }, 1000);
+    }, 500);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Poll chat messages every 3s when user is selected
   useEffect(() => {
     if (!selectedUser) return;
 
@@ -73,7 +71,6 @@ const Chat = ({ user, setUser }) => {
         })
         .then((res) => {
           setMessages(res.data);
-          // Mark messages as read
           axios.put(
             "http://localhost:5000/api/messages/mark-read",
             { from: selectedUser._id },
@@ -83,8 +80,8 @@ const Chat = ({ user, setUser }) => {
         .catch((err) => console.error("Polling error:", err));
     };
 
-    fetchMessages(); // Fetch immediately
-    const interval = setInterval(fetchMessages, 3000); // Poll every 3s
+    fetchMessages(); 
+    const interval = setInterval(fetchMessages, 1000);
 
     return () => clearInterval(interval);
   }, [selectedUser]);
@@ -116,7 +113,6 @@ const Chat = ({ user, setUser }) => {
   
   return (
     <div>
-      {/* <Navbar user={user} setUser={setUser} /> */}
       <div className="chat-wrapper">
         <div className="users-list">
           <h3>Users</h3>
@@ -140,9 +136,7 @@ const Chat = ({ user, setUser }) => {
               <h3>Chat with {selectedUser.username}</h3>
               <div className="chat-header"> <button 
     onClick={handleDeleteChat}
-  >
-        <FaTrash />
-
+  >    <FaTrash />
   </button></div>
              
               <div className="messages">
