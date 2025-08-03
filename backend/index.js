@@ -1,30 +1,35 @@
-const express= require("express");
-const dotenv = require("dotenv");
-dotenv.config();
+const express = require("express");
 const cors = require("cors");
-const connectDB = require('./config/db');
 const cookieParser = require("cookie-parser");
+const connectDB = require("./config/db");
 
 connectDB();
 
 const app = express();
 app.use(cookieParser());
-app.use(cors({
-  origin: "http://localhost:5173", 
-  credentials: true 
-}));
+
+app.use(
+  cors({
+    origin: "https://mern-chat-app-or1l.onrender.com", // ✅ hardcoded production URL
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/users', require('./routes/users'));
-app.use('/api/messages', require('./routes/messages'));
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/users", require("./routes/users"));
+app.use("/api/messages", require("./routes/messages"));
 
-const server = app.listen(5000, ()=>{
-    console.log(`🚀 Server running on port 5000`);
+const server = app.listen(5000, () => {
+  console.log("🚀 Server running on port 5000");
 });
 
-const io = require("socket.io")(server,{
-    cors: {origin: "http://localhost:5173"}
+const io = require("socket.io")(server, {
+  cors: {
+    origin: "https://mern-chat-app-or1l.onrender.com",
+    credentials: true,
+  },
 });
 
 const onlineUsers = new Map();
